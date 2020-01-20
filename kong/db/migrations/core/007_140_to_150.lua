@@ -2,7 +2,7 @@ return {
   postgres = {
     up = [[
       -- If migrating from 1.x, the "path_handling" column does not exist yet.
-      -- Create it with a default of 'v1' to fill existing rows, then change the default.
+      -- Create it with a default of 'v1' to fill existing rows.
       DO $$
       BEGIN
         ALTER TABLE IF EXISTS ONLY "routes" ADD "path_handling" TEXT DEFAULT 'v1';
@@ -10,27 +10,7 @@ return {
         -- Do nothing, accept existing state
       END;
       $$;
-      ALTER TABLE IF EXISTS ONLY "routes" ALTER COLUMN "path_handling" SET DEFAULT 'v0';
     ]],
-
-    teardown = function(connector)
-      assert(connector:query([[
-        DO $$
-        BEGIN
-          ALTER TABLE IF EXISTS ONLY "plugins" DROP COLUMN "run_on";
-        EXCEPTION WHEN UNDEFINED_COLUMN THEN
-          -- Do nothing, accept existing state
-        END;
-        $$;
-
-
-        DO $$
-        BEGIN
-          DROP TABLE IF EXISTS "cluster_ca";
-        END;
-        $$;
-      ]]))
-    end,
   },
 
   cassandra = {
@@ -54,21 +34,6 @@ return {
           end
         end
       end
-
-      assert(connector:query([[
-        DROP INDEX IF EXISTS plugins_run_on_idx;
-
-
-        DROP TABLE IF EXISTS cluster_ca;
-      ]]))
-
-      -- no need to drop the actual row from the database
-      -- (this operation is not reentrant in Cassandra)
-      --[===[
-      assert(connector:query([[
-        ALTER TABLE plugins DROP run_on;
-      ]]))
-      ]===]
     end,
   },
 }
