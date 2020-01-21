@@ -1,6 +1,6 @@
 dist: xenial
 
-language: generic
+language: go
 
 jdk:
   - oraclejdk8
